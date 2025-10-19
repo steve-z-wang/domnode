@@ -6,6 +6,7 @@ from domnode.filters.semantic import (
     filter_attributes,
     filter_empty,
     collapse_single_child_wrappers,
+    filter_presentational_roles,
     SEMANTIC_ATTRIBUTES,
 )
 
@@ -189,3 +190,86 @@ class TestCollapseWrappers:
         collapsed = collapse_single_child_wrappers(wrapper)
         # Should collapse because whitespace is not meaningful
         assert collapsed.tag == "button"
+
+
+class TestFilterPresentationalRoles:
+    """Tests for filter_presentational_roles."""
+
+    def test_remove_role_none(self):
+        node = Node(tag="div", attrib={"role": "none", "class": "wrapper"})
+        filtered = filter_presentational_roles(node)
+        assert "role" not in filtered.attrib
+        assert "class" in filtered.attrib
+
+    def test_remove_role_presentation(self):
+        node = Node(tag="ul", attrib={"role": "presentation"})
+        filtered = filter_presentational_roles(node)
+        assert "role" not in filtered.attrib
+
+    def test_case_insensitive(self):
+        node1 = Node(tag="div", attrib={"role": "NONE"})
+        node2 = Node(tag="div", attrib={"role": "Presentation"})
+        
+        filtered1 = filter_presentational_roles(node1)
+        filtered2 = filter_presentational_roles(node2)
+        
+        assert "role" not in filtered1.attrib
+        assert "role" not in filtered2.attrib
+
+    def test_keep_other_roles(self):
+        node = Node(tag="div", attrib={"role": "button"})
+        filtered = filter_presentational_roles(node)
+        assert filtered.attrib.get("role") == "button"
+
+    def test_keep_structure_with_list(self):
+        # Important: preserve list structure even with role="none"
+        ul = Node(tag="ul", attrib={"role": "none"})
+        li1 = Node(tag="li")
+        li1.append(Text("Item 1"))
+        li2 = Node(tag="li")
+        li2.append(Text("Item 2"))
+        ul.append(li1)
+        ul.append(li2)
+        
+        filtered = filter_presentational_roles(ul)
+        assert filtered.tag == "ul"
+        assert "role" not in filtered.attrib
+        assert len(filtered.children) == 2
+        assert filtered.children[0].tag == "li"
+        assert filtered.children[1].tag == "li"
+
+    def test_nested_presentational_roles(self):
+        parent = Node(tag="div", attrib={"role": "none"})
+        child = Node(tag="span", attrib={"role": "presentation"})
+        parent.append(child)
+        
+        filtered = filter_presentational_roles(parent)
+        assert "role" not in filtered.attrib
+        assert "role" not in filtered.children[0].attrib
+
+    def test_keep_text_nodes(self):
+        parent = Node(tag="div", attrib={"role": "none"})
+        parent.append(Text("Hello"))
+        
+        filtered = filter_presentational_roles(parent)
+        assert len(filtered.children) == 1
+        assert isinstance(filtered.children[0], Text)
+        assert filtered.children[0].content == "Hello"
+
+    def test_mixed_roles_in_tree(self):
+        root = Node(tag="div", attrib={"role": "main"})
+        child1 = Node(tag="div", attrib={"role": "none"})
+        child2 = Node(tag="div", attrib={"role": "button"})
+        root.append(child1)
+        root.append(child2)
+        
+        filtered = filter_presentational_roles(root)
+        assert filtered.attrib.get("role") == "main"
+        assert "role" not in filtered.children[0].attrib
+        assert filtered.children[1].attrib.get("role") == "button"
+
+    def test_no_role_attribute(self):
+        node = Node(tag="div", attrib={"class": "container"})
+        filtered = filter_presentational_roles(node)
+        assert "role" not in filtered.attrib
+        assert "class" in filtered.attrib
