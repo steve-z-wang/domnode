@@ -3,7 +3,7 @@
 from ...node import Node, Text
 
 
-def collapse_wrappers(node: Node) -> Node:
+def collapse_single_child_wrappers(node: Node) -> Node:
     """
     Collapse single-child wrapper elements.
 
@@ -20,7 +20,7 @@ def collapse_wrappers(node: Node) -> Node:
         >>> wrapper = Node(tag='div')  # No attributes
         >>> child = Node(tag='button', attrib={'role': 'button'})
         >>> wrapper.append(child)
-        >>> collapsed = collapse_wrappers(wrapper)
+        >>> collapsed = collapse_single_child_wrappers(wrapper)
         >>> collapsed.tag
         'button'
     """
@@ -30,7 +30,7 @@ def collapse_wrappers(node: Node) -> Node:
         if isinstance(child, Text):
             new_children.append(Text(child.content))
         elif isinstance(child, Node):
-            collapsed_child = collapse_wrappers(child)
+            collapsed_child = collapse_single_child_wrappers(child)
             new_children.append(collapsed_child)
 
     # Check if this is a wrapper to collapse

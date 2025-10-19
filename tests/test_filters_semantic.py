@@ -5,7 +5,7 @@ from domnode.node import Node, Text
 from domnode.filters.semantic import (
     filter_attributes,
     filter_empty,
-    collapse_wrappers,
+    collapse_single_child_wrappers,
     SEMANTIC_ATTRIBUTES,
 )
 
@@ -125,14 +125,14 @@ class TestFilterEmpty:
 
 
 class TestCollapseWrappers:
-    """Tests for collapse_wrappers."""
+    """Tests for collapse_single_child_wrappers."""
 
     def test_collapse_single_child_wrapper(self):
         wrapper = Node(tag="div")  # No attributes
         child = Node(tag="button", attrib={"role": "button"})
         wrapper.append(child)
 
-        collapsed = collapse_wrappers(wrapper)
+        collapsed = collapse_single_child_wrappers(wrapper)
         assert collapsed.tag == "button"
         assert collapsed.attrib["role"] == "button"
 
@@ -141,7 +141,7 @@ class TestCollapseWrappers:
         child = Node(tag="button")
         wrapper.append(child)
 
-        collapsed = collapse_wrappers(wrapper)
+        collapsed = collapse_single_child_wrappers(wrapper)
         assert collapsed.tag == "div"
         assert collapsed.attrib["role"] == "navigation"
 
@@ -150,7 +150,7 @@ class TestCollapseWrappers:
         wrapper.append(Node(tag="button"))
         wrapper.append(Node(tag="button"))
 
-        collapsed = collapse_wrappers(wrapper)
+        collapsed = collapse_single_child_wrappers(wrapper)
         assert collapsed.tag == "div"
         assert len(collapsed.children) == 2
 
@@ -159,7 +159,7 @@ class TestCollapseWrappers:
         wrapper.append(Text("Label: "))
         wrapper.append(Node(tag="button"))
 
-        collapsed = collapse_wrappers(wrapper)
+        collapsed = collapse_single_child_wrappers(wrapper)
         assert collapsed.tag == "div"
 
     def test_nested_collapse(self):
@@ -169,7 +169,7 @@ class TestCollapseWrappers:
         middle.append(inner)
         outer.append(middle)
 
-        collapsed = collapse_wrappers(outer)
+        collapsed = collapse_single_child_wrappers(outer)
         # Should collapse all the way to button
         assert collapsed.tag == "button"
 
@@ -177,7 +177,7 @@ class TestCollapseWrappers:
         parent = Node(tag="div", attrib={"role": "group"})
         parent.append(Text("Hello"))
 
-        collapsed = collapse_wrappers(parent)
+        collapsed = collapse_single_child_wrappers(parent)
         assert len(collapsed.children) == 1
         assert isinstance(collapsed.children[0], Text)
 
@@ -186,6 +186,6 @@ class TestCollapseWrappers:
         wrapper.append(Text("   "))  # Whitespace
         wrapper.append(Node(tag="button"))
 
-        collapsed = collapse_wrappers(wrapper)
+        collapsed = collapse_single_child_wrappers(wrapper)
         # Should collapse because whitespace is not meaningful
         assert collapsed.tag == "button"
