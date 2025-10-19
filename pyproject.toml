@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "domnode"
-version = "0.1.0"
+version = "0.1.1"
 description = "DOM nodes with browser rendering data for web automation"
 readme = "README.md"
 requires-python = ">=3.9"
