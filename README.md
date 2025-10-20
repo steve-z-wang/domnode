@@ -1,5 +1,11 @@
 # domnode
 
+> ⚠️ **DEPRECATED**: This package has been merged into [webtask](https://github.com/steve-z-wang/webtask).
+>
+> Please use `pip install webtask` instead.
+
+---
+
 DOM nodes with browser rendering data for web automation.
 
 A Python library for parsing and filtering DOM trees with browser rendering information. Supports HTML and Chrome DevTools Protocol snapshots.
